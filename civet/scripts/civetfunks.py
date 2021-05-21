@@ -117,12 +117,12 @@ def get_package_data(thisdir,config):
     clean_locs_file = pkg_resources.resource_filename('civet', 'data/mapping_files/adm2_cleaning.csv')
     map_input_1 = pkg_resources.resource_filename('civet', 'data/mapping_files/gadm36_GBR_2.json')
     map_input_2 = pkg_resources.resource_filename('civet', 'data/mapping_files/channel_islands.json')  
-    map_input_3 = pkg_resources.resource_filename('civet', 'data/mapping_files/NI_counties.geojson')  
+    map_input_3 = pkg_resources.resource_filename('civet', 'data/mapping_files/BC_Health_Authority_Boundaries__with_Provincial_Health_Services_Boundary.geojson')  
     map_input_4 = pkg_resources.resource_filename('civet', 'data/mapping_files/Mainland_HBs_gapclosed_mapshaped_d3.json')
     map_input_5 = pkg_resources.resource_filename('civet', 'data/mapping_files/urban_areas_UK.geojson')
     map_input_6 = pkg_resources.resource_filename('civet', 'data/mapping_files/UK_outPC_coords.csv')
     spatial_translations_1 = pkg_resources.resource_filename('civet', 'data/mapping_files/HB_Translation.pkl')
-    spatial_translations_2 = pkg_resources.resource_filename('civet', 'data/mapping_files/adm2_regions_to_coords.csv')
+    spatial_translations_2 = pkg_resources.resource_filename('civet', 'data/mapping_files/canada_city_coords.csv')
     appendix_text = pkg_resources.resource_filename('civet', 'data/appendix.txt')
     config["reference_fasta"] = reference_fasta
     config["outgroup_fasta"] = outgroup_fasta
