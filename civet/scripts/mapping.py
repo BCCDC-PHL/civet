@@ -12,26 +12,27 @@ import os
 
 def generate_all_uk_dataframe(mapping_input):
 
-    uk_file = mapping_input[0]
-    channel_file = mapping_input[1]
-    ni_file = mapping_input[2]
+    bc_file = mapping_input[0]
+    # channel_file = mapping_input[1]
+    # ni_file = mapping_input[2]
 
-    UK = geopandas.read_file(uk_file)
-    NI = geopandas.read_file(ni_file)
-    channels = geopandas.read_file(channel_file)
+    BC = geopandas.read_file(uk_file)
+    BC['NAME_2'] = "British Columbia"
+    # NI = geopandas.read_file(ni_file)
+    # channels = geopandas.read_file(channel_file)
 
     ###GET NI COUNTIES
 
-    ni_name = []
-    for i in range(len(NI["CountyName"])):
-        ni_name.append("Northern Ireland C")
+    # ni_name = []
+    # for i in range(len(NI["CountyName"])):
+    #     ni_name.append("Northern Ireland C")
 
-    NI["NAME_2"] = NI["CountyName"]
-    NI["NAME_1"] = ni_name  
+    # NI["NAME_2"] = NI["CountyName"]
+    # NI["NAME_1"] = ni_name  
 
-    all_uk = UK.append(channels).append(NI)
+    # all_uk = UK.append(channels).append(NI)
 
-    return all_uk
+    return BC
 
 
 def find_ambiguities(adm2s):

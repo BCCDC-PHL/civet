@@ -43,7 +43,7 @@ def get_defaults():
                     "up_distance":False,
                     "down_distance":False,
                     "collapse_threshold":1,
-                    "sequencing_centre":"DEFAULT",
+                    "sequencing_centre":"BCCDC",
                     "tree_fields":"adm1",
                     "local_lineages":False,
                     "map_sequences":False,
@@ -67,7 +67,7 @@ def get_defaults():
                     "include_bars":False,
                     "omit_trees":False,
                     "omit_appendix":True,
-                    "table_fields":["sample_date", "uk_lineage", "lineage", "phylotype"],
+                    "table_fields":["sample_date", "local_lineage", "lineage", "phylotype"],
                     "context_table_summary":False,
                     "threads":1,
                     "force":True,
@@ -131,16 +131,15 @@ def get_package_data(thisdir,config):
     config["footer"] = footer_fig
     config["appendix"] = appendix_text
     
-    config["clean_locs_file"] = clean_locs_file
-    # config["uk_map"] = map_input_1
-    # config["channels_map"] = map_input_2
-    # config["ni_map"] = map_input_3
-    # config["uk_map_d3"] = map_input_4
-    # config["urban_centres"] = map_input_5
-    config['bc_map'] = map_input_bc
-    # config["pc_file"] = map_input_6
-    # config["HB_translations"] = spatial_translations_1
-    # config["PC_translations"] = spatial_translations_2
+    config["clean_locs_file"] = spatial_translations_bc
+    config["bc_map"] = map_input_bc
+    config["channels_map"] = map_input_bc
+    config["ni_map"] = map_input_bc
+    config["uk_map_d3"] = map_input_bc
+    config["urban_centres"] = map_input_bc
+    config["pc_file"] = map_input_bc
+    config["HB_translations"] = spatial_translations_bc
+    config["PC_translations"] = spatial_translations_bc
 
     report_template = os.path.join(thisdir, 'scripts','civet_template.pmd')
 
@@ -474,8 +473,8 @@ def local_lineages_qc(config):
         if "adm2" not in config["background_metadata_header"]:
             sys.stderr.write(qcfunk.cyan('Error: no geographic information found for local lineage analysis. Please provide a column in the background metadata with the header "adm2"\n'))
             sys.exit(-1)
-        elif "uk_lineage" not in config["background_metadata_header"]:
-            sys.stderr.write(qcfunk.cyan('Error: no uk lineage information found for local lineage analysis. Please provide a column in the background metadata with the header "uk_lineage"\n'))
+        elif "local_lineage" not in config["background_metadata_header"]:
+            sys.stderr.write(qcfunk.cyan('Error: no local lineage information found for local lineage analysis. Please provide a column in the background metadata with the header "local_lineage"\n'))
             sys.exit(-1)
 
         if config["date_restriction"]:
@@ -565,8 +564,10 @@ def map_sequences_config(config):
 
 def get_sequencing_centre_header(config):
     
-    sc_list = ["PHEC", 'LIVE', 'BIRM', 'PHWC', 'CAMB', 'NORW', 'GLAS', 'EDIN', 'SHEF',
-                'EXET', 'NOTT', 'PORT', 'OXON', 'NORT', 'NIRE', 'GSTT', 'LOND', 'SANG',"NIRE"]
+    sc_list = [
+        "BCCDC", "PHEC", 'LIVE', 'BIRM', 'PHWC', 'CAMB', 'NORW', 'GLAS', 'EDIN', 'SHEF',
+        'EXET', 'NOTT', 'PORT', 'OXON', 'NORT', 'NIRE', 'GSTT', 'LOND', 'SANG',"NIRE"
+    ]
 
     sequencing_centre = config["sequencing_centre"]
     if sequencing_centre in sc_list or sequencing_centre == "DEFAULT":
