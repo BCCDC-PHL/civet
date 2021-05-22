@@ -10,13 +10,13 @@ import adjustText as aT
 import os
 
 
-def generate_all_uk_dataframe(mapping_input):
+def generate_all_bc_dataframe(mapping_input):
 
     bc_file = mapping_input[0]
     # channel_file = mapping_input[1]
     # ni_file = mapping_input[2]
 
-    BC = geopandas.read_file(uk_file)
+    BC = geopandas.read_file(bc_file)
     BC['NAME_2'] = "British Columbia"
     # NI = geopandas.read_file(ni_file)
     # channels = geopandas.read_file(channel_file)
@@ -73,31 +73,31 @@ def prep_mapping_data(mapping_input, tax_dict):
 
     ambiguous_dict = find_ambiguities(adm2s)
 
-    all_uk = generate_all_uk_dataframe(mapping_input)
+    all_bc = generate_all_bc_dataframe(mapping_input)
 
     ###CAPITALISE GEOJSON DATA
 
     uppers = []
-    for i in all_uk["NAME_2"]:
+    for i in all_bc["NAME_2"]:
         uppers.append(i.upper().replace(" ","_"))
 
-    all_uk["NAME_2"] = uppers
+    all_bc["NAME_2"] = uppers
 
-    original = all_uk.copy()
+    original = all_bc.copy()
 
     ##DEAL WITH MERGED LOCATIONS EG WEST MIDLANDS
 
     for_merging = []
 
-    for location in all_uk["NAME_2"]:
+    for location in all_bc["NAME_2"]:
         if location in ambiguous_dict:
             for_merging.append(ambiguous_dict[location])
         else:
             for_merging.append(location)
 
-    all_uk["Multi_loc"] = for_merging
+    all_bc["Multi_loc"] = for_merging
 
-    merged_locs = all_uk.dissolve(by="Multi_loc")
+    merged_locs = all_bc.dissolve(by="Multi_loc")
 
     mergeds = []
     for multi_loc in merged_locs.index:
@@ -109,11 +109,11 @@ def prep_mapping_data(mapping_input, tax_dict):
 
     result = pd.merge(merged_locs, original, how="outer")
 
-    return all_uk, result, adm2s, ambiguous_dict
+    return all_bc, result, adm2s, ambiguous_dict
 
 def make_centroids_get_counts(result, adm2s, ambiguous_dict):
 
-    not_mappable = ["WALES", "OTHER", "UNKNOWN", "UNKNOWN_SOURCE", "NOT_FOUND", "GIBRALTAR", "FALKLAND_ISLANDS", "CITY_CENTRE"]
+    not_mappable = ["OTHER", "UNKNOWN", "NOT_FOUND"]
 
     centroid_df = defaultdict(list)
     centroid_dict = {}
@@ -150,12 +150,12 @@ def make_centroids_get_counts(result, adm2s, ambiguous_dict):
 def pull_map_data(input_file, background_metadata, input_headers, background_headers, input_name_col, background_name_col, tax_dict, col_name):
 
     some_missing_adm2 = False
-    
+
     if col_name in input_headers:
         with open(input_file) as f:
             reader = csv.DictReader(f)
             data = [r for r in reader]
-            
+
             for seq in data:
                 name = seq[input_name_col]
                 adm2 = seq[col_name]
@@ -168,20 +168,20 @@ def pull_map_data(input_file, background_metadata, input_headers, background_hea
                         some_missing_adm2 = True
     else:
         some_missing_adm2 = True
-    
+
     if col_name in background_headers and some_missing_adm2:
         with open(background_metadata) as f:
             reader = csv.DictReader(f)
             data = [r for r in reader]
-            
+
             for seq in data:
                 name = seq["sequence_name"]
                 adm2 = seq[col_name]
                 if name in tax_dict:
                     if "adm2_map" not in tax_dict[name].attribute_dict or tax_dict[name].attribute_dict["adm2_map"] == "":
                         tax_dict[name].attribute_dict["adm2_map"] = adm2                        
-    
-    
+
+
     for obj in tax_dict.values():
         if "adm2_map" not in obj.attribute_dict:
             obj.attribute_dict["adm2_map"] = ""
@@ -209,36 +209,33 @@ def prep_data_old(tax_dict, clean_locs_file):
             metadata_loc = toks[0]
             real_locs = toks[1:]   
             
-            if metadata_loc == 'RHONDDA CYNON TAF':
-                straight_map[metadata_loc] = "RHONDDA, CYNON, TAFF" 
+            if len(real_locs) == 1:
+              straight_map[metadata_loc] = real_locs[0].upper()
             else:
-                if len(real_locs) == 1:
-                    straight_map[metadata_loc] = real_locs[0].upper()
-                else:
-                    for i in real_locs:
-                        metadata_multi_loc[i.upper()] = metadata_loc.upper()
+              for i in real_locs:
+                metadata_multi_loc[i.upper()] = metadata_loc.upper()
     
     return adm2s, metadata_multi_loc, straight_map
 
 def prep_mapping_data_old(mapping_input, metadata_multi_loc):
 
-    all_uk = generate_all_uk_dataframe(mapping_input)
+    all_bc = generate_all_bc_dataframe(mapping_input)
     
     ###CAPITALISE GEOJSON DATA
 
     uppers = []
-    for i in all_uk["NAME_2"]:
+    for i in all_bc["NAME_2"]:
         uppers.append(i.upper())
         
-    all_uk["NAME_2"] = uppers
+    all_bc["NAME_2"] = uppers
 
-    original = all_uk.copy()
+    original = all_bc.copy()
 
     ##DEAL WITH MERGED LOCATIONS EG WEST MIDLANDS
 
     for_merging = []
 
-    for location in all_uk["NAME_2"]:
+    for location in all_bc["NAME_2"]:
         if location in metadata_multi_loc.keys():
             new_loc = metadata_multi_loc[location]
         else:
@@ -246,9 +243,9 @@ def prep_mapping_data_old(mapping_input, metadata_multi_loc):
             
         for_merging.append(new_loc)
 
-    all_uk["Multi_loc"] = for_merging
+    all_bc["Multi_loc"] = for_merging
 
-    merged_locs = all_uk.dissolve(by="Multi_loc")
+    merged_locs = all_bc.dissolve(by="Multi_loc")
 
     mergeds = []
     for multi_loc in merged_locs.index:
@@ -260,12 +257,12 @@ def prep_mapping_data_old(mapping_input, metadata_multi_loc):
 
     result = pd.merge(merged_locs, original, how="outer")
 
-    return all_uk, result
+    return all_bc, result
 
 
 def make_centroids_old(result,adm2s, straight_map):
 
-    not_mappable = ["WALES", "OTHER", "UNKNOWN", "UNKNOWN SOURCE", "NOT FOUND", "GIBRALTAR", "FALKLAND ISLANDS", "CITY CENTRE"]
+    not_mappable = ["OTHER", "UNKNOWN", "NOT FOUND"]
 
     centroid_dict = {}
 
@@ -289,30 +286,30 @@ def make_centroids_old(result,adm2s, straight_map):
             if adm2 != "" and adm2 not in not_mappable:
                 print(adm2 + " is not associated with an correct adm2 region so cannot be plotted yet.")
             if "|" in adm2:
-                print("This may be because you are using cleaned adm2 regions as an input but an old version of the background data pre-cleaning in phylo-pipe. If this is unexpected behaviour please contact Verity Hill.")
-                
+                print("This may be because you are using cleaned adm2 regions as an input but an old version of the background data pre-cleaning in phylo-pipe. If this is unexpected behaviour please contact BCCDC-PHL Data Administrators.")
+
         try:
             centroid_df["Adm2"].append(adm2)
             centroid_df["geometry"].append(centroid)
             centroid_df["seq_count"].append(count)
         except UnboundLocalError:
             return False
-        
-        
+
+
     centroid_geo = geopandas.GeoDataFrame(centroid_df)
 
     return centroid_geo, centroid_counts
 
-def make_map(centroid_geo, all_uk, figdir):
+def make_map(centroid_geo, all_bc, figdir):
 
     fig, ax = plt.subplots(1, 1)
     fig.set_size_inches(20, 15)
 
-    all_uk = all_uk.to_crs("EPSG:3395")
+    all_bc = all_bc.to_crs("EPSG:3395")
     centroid_geo.crs = "EPSG:4326"
-    centroids_final = centroid_geo.to_crs(all_uk.crs)
+    centroids_final = centroid_geo.to_crs(all_bc.crs)
 
-    base = all_uk.plot(ax=ax, color="steelblue")
+    base = all_bc.plot(ax=ax, color="steelblue")
 
     centroids_final.plot(ax=base, color="goldenrod", markersize=centroids_final["seq_count"]*10)
 
@@ -322,16 +319,16 @@ def make_map(centroid_geo, all_uk, figdir):
 
 
 
-def map_adm2(tax_dict, clean_locs_file, mapping_json_files, figdir, input_csv, background_metadata, input_headers, background_headers, input_name_col, background_name_col, map_info_col, old_data): #So this takes adm2s and plots them onto the whole UK
+def map_adm2(tax_dict, clean_locs_file, mapping_json_files, figdir, input_csv, background_metadata, input_headers, background_headers, input_name_col, background_name_col, map_info_col, old_data): #So this takes adm2s and plots them onto the whole BC
 
     tax_dict = pull_map_data(input_csv, background_metadata, input_headers, background_headers,input_name_col, background_name_col, tax_dict, map_info_col)
     
     if old_data:
         adm2s, metadata_multi_loc, straight_map = prep_data_old(tax_dict, clean_locs_file)
-        all_uk, result = prep_mapping_data_old(mapping_json_files, metadata_multi_loc)
+        all_bc, result = prep_mapping_data_old(mapping_json_files, metadata_multi_loc)
         output = make_centroids_old(result, adm2s, straight_map)
 
-    
+
         if type(output) == bool:
             print("None of the sequences provided have adequate adm2 data and so cannot be mapped")
             return
@@ -344,7 +341,7 @@ def map_adm2(tax_dict, clean_locs_file, mapping_json_files, figdir, input_csv, b
             print("None of the sequences provided have adequate adm2 data and so cannot be mapped")
             return
         else:
-            all_uk, result, adm2s, ambiguous_dict = output
+            all_bc, result, adm2s, ambiguous_dict = output
 
         centroid_geo, adm2_counter = make_centroids_get_counts(result, adm2s, ambiguous_dict)
 
@@ -355,7 +352,7 @@ def map_adm2(tax_dict, clean_locs_file, mapping_json_files, figdir, input_csv, b
     total = len(tax_dict)
 
     adm2_to_label = {}
-    
+
     for taxa in tax_dict.values():
         if taxa.attribute_dict["adm2_map"].upper() != taxa.attribute_dict["location_label"].upper():
             adm2_to_label[taxa.attribute_dict["adm2_map"]] = taxa.attribute_dict["location_label"]
@@ -475,8 +472,8 @@ def plot_coordinates(mapping_json_files, urban_centres, name_to_coords, name_to_
 
     ##MAKE DATAFRAME##
 
-    all_uk = generate_all_uk_dataframe(mapping_json_files)
-    all_uk = all_uk.to_crs("EPSG:3395")
+    all_bc = generate_all_bc_dataframe(mapping_json_files)
+    all_bc = all_bc.to_crs("EPSG:3395")
 
     urban = geopandas.read_file(urban_centres)
 
@@ -490,7 +487,7 @@ def plot_coordinates(mapping_json_files, urban_centres, name_to_coords, name_to_
     crs = {'init':input_crs}
 
     df = geopandas.GeoDataFrame(df_dict, crs=crs)    
-    df_final = df.to_crs(all_uk.crs)
+    df_final = df.to_crs(all_bc.crs)
 
     ##IDENTIFY WHICH ADM2 ARE PRESENT##
 
@@ -515,12 +512,12 @@ def plot_coordinates(mapping_json_files, urban_centres, name_to_coords, name_to_
 
     ##PREP THE DIFFERENT LAYERS##
 
-    filtered = all_uk[all_uk.NAME_2.isin(list(adm2_counter.keys()))]
+    filtered = all_bc[all_bc.NAME_2.isin(list(adm2_counter.keys()))]
 
     filtered_shape = filtered.dissolve(by="NAME_0")
     filtered_urban = urban[(urban["geometry"].bounds["minx"] > float(filtered_shape["geometry"].bounds.minx)) & (urban["geometry"].bounds["maxx"] < float(filtered_shape["geometry"].bounds.maxx)) & (urban["geometry"].bounds["miny"] > float(filtered_shape["geometry"].bounds.miny)) & (urban["geometry"].bounds["maxy"] < float(filtered_shape["geometry"].bounds.maxy))]
 
-    expanded_filter = all_uk[(all_uk["geometry"].bounds["minx"] > float(filtered_shape["geometry"].bounds.minx)) & (all_uk["geometry"].bounds["maxx"] < float(filtered_shape["geometry"].bounds.maxx)) & (all_uk["geometry"].bounds["miny"] > float(filtered_shape["geometry"].bounds.miny)) & (all_uk["geometry"].bounds["maxy"] < float(filtered_shape["geometry"].bounds.maxy))]
+    expanded_filter = all_bc[(all_bc["geometry"].bounds["minx"] > float(filtered_shape["geometry"].bounds.minx)) & (all_uk["geometry"].bounds["maxx"] < float(filtered_shape["geometry"].bounds.maxx)) & (all_uk["geometry"].bounds["miny"] > float(filtered_shape["geometry"].bounds.miny)) & (all_uk["geometry"].bounds["maxy"] < float(filtered_shape["geometry"].bounds.maxy))]
 
     ##MAKE MAP##
 
@@ -619,28 +616,28 @@ def local_lineages_section(lineage_maps, lineage_tables, date_restriction, date_
         for l in f:
             centralName = l.strip("### ").strip("\n")
             break
-    
+
     linmapList = convert_str_to_list(lineage_maps, True)        
 
-    print(f'Based on the sample density for submitted sequences with adm2 metadata, **{centralName}** was determined to be the focal NHS Health-board.\n')
-    
+    print(f'Based on the sample density for submitted sequences with adm2 metadata, **{centralName}** was determined to be the focal Provincial Health Authority.\n')
+
     if date_restriction:
         if date_range_start and date_range_end:
-            print(f'The below figure visualises the relative proportion of assigned UK-Lineages for samples sampled in **{centralName}** from {date_range_start} to {date_range_end}')
+            print(f'The below figure visualises the relative proportion of assigned Local Lineages for samples sampled in **{centralName}** from {date_range_start} to {date_range_end}')
         elif date_range_start and not date_range_end:
-            print(f'The below figure visualises the relative proportion of assigned UK-Lineages for samples sampled in **{centralName}** from {date_range_start} to {today}')
+            print(f'The below figure visualises the relative proportion of assigned Local Lineages for samples sampled in **{centralName}** from {date_range_start} to {today}')
         elif date_window:
-            print(f'The below figure visualises the relative proportion of assigned UK-Lineages for samples sampled in **{centralName}** for {date_window} days before the most recent sample.')
+            print(f'The below figure visualises the relative proportion of assigned Local Lineages for samples sampled in **{centralName}** for {date_window} days before the most recent sample.')
     else:
-        print(f'The below figure visualises the relative proportion of assigned UK-Lineages for samples sampled in **{centralName}** for the whole epidemic.')
+        print(f'The below figure visualises the relative proportion of assigned Local Lineages for samples sampled in **{centralName}** for the whole epidemic.')
     
     print ("![]("+linmapList[0]+")\n")
-    print(f'The below figure visualises the relative proportions of assigned UK-Lineages for samples collected in the whole region for the defined time-frame. Plot-size demonstrates relative numbers of sequences across given NHS healthboards.')
+    print(f'The below figure visualises the relative proportions of assigned Local Lineages for samples collected in the whole region for the defined time-frame. Plot-size demonstrates relative numbers of sequences across given Health Authorities.')
     print ("![]("+linmapList[2]+")\n")
-    #print(f'The below figure visualises the relative proportion of assigned UK-Lineages for samples collected and sequenced within neighbouring healthboard regions for the defined time-frame.')
+    #print(f'The below figure visualises the relative proportion of assigned Local Lineages for samples collected and sequenced within neighbouring health authority regions for the defined time-frame.')
     #print ("![]("+linmapList[1]+")")
     #print('\n')
-    print(f'Tabulated lineage data for the **central** health-board region:\n')
+    print(f'Tabulated lineage data for the **central** health authority region:\n')
 
     with open(centralLoc, 'r') as file:
         count = 0
@@ -651,7 +648,7 @@ def local_lineages_section(lineage_maps, lineage_tables, date_restriction, date_
                 l=l
             print(l)
             count += 1
-    print(f'Tabulated lineage data for the **neighbouring** health-board regions:\n')
+    print(f'Tabulated lineage data for the **neighbouring** health authority regions:\n')
 
     for each in tableList:
         with open(each, "r") as file: 
