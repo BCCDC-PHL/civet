@@ -28,7 +28,7 @@ parser.add_argument("--date-window", action="store",required=False, type=int, de
 parser.add_argument("--output-base-dir", action="store", type=str, dest="output_base_dir")
 parser.add_argument("--output-temp-dir", action="store", type=str, dest="output_temp_dir")
 parser.add_argument("--hb-translation", action="store", type=str, dest="hb_translation")
-parser.add_argument("--uk-map", action="store", type=str, dest="uk_map")
+parser.add_argument("--bc-map", action="store", type=str, dest="bc_map")
 #parser.add_argument("--civet-cat", action="store", type=str, dest="civet_cat_dir")
 
 argsIN=parser.parse_args()
@@ -37,7 +37,7 @@ currentDir=os.getcwd()
 outDIR=argsIN.output_base_dir
 
 translator=argsIN.hb_translation
-mapfile=argsIN.uk_map
+mapfile=argsIN.bc_map
 
 date_pair=[]
 for each in [argsIN.date_pair_start, argsIN.date_pair_end]:
@@ -54,23 +54,8 @@ def adm2cleaning(data_cog, samplecsv=False):
     else:
         data_cog2 = data_cog.copy()
     
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^MOTHERWELL$', 'NORTH_LANARKSHIRE', regex=True).copy()
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^GREATER_LONDON$', 'GREATER_LONDON', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^BORDERS$', 'SCOTTISH _ORDERS', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^PAISLEY$', 'RENFREWSHIRE', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^SUTTON-IN-ASHFIELD$', 'NOTTINGHAMSHIRE', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^LONDON$', 'GREATER_LONDON', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^KILMARNOCK$', 'EAST_AYRSHIRE', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^PERTH$', 'PERTHSHIRE_AND_KINROSS', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^ISLE OF ANGLESEY$', 'ANGLESEY', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^SHETLAND$', 'SHETLAND_ISLANDS', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^GREATER LONDONDERRY$', 'LONDONDERRY', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^STAFFORD$', 'STAFFORDSHIRE', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^INVERNESS$', 'HIGHLAND', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^KINGS NORTON$', 'WEST_MIDLANDS', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^GLASGOW CITY$', 'GLASGOW', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^CITY OF LONDON$', 'GREATER_LONDON', regex=True)
-    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^RHONDDA CYNON TAF$', 'RHONDDA, CYNON, TAFF', regex=True)
+    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^VANCOUVER$', 'VANCOUVER', regex=True).copy()
+    data_cog2['adm2'] = data_cog2['adm2'].str.replace('^BURNABY$', 'BURNABY', regex=True)
     return data_cog2
 
 
@@ -117,16 +102,16 @@ def getForthBridge(DFin, weightedMatrix):
 def tabulateLins(HBCODE, DF, HBNAME):
     for each in [HBCODE]:
       #the first part is never true, it never finds the HBCode being the same
-      if len(DF.loc[DF['HBCode'] == each]['uk_lineage'].value_counts().to_frame()) > 20:
-          uk_lin_DF = DF.loc[DF['HBCode'] == each]['uk_lineage'].value_counts()[:20].to_frame()
-          uk_lin_DF = uk_lin_DF.reset_index()
-          uk_lin_DF.columns = ['UK Lineage', 'Count']
-          uk_lin_DF['Count'] = uk_lin_DF['Count'].astype(int)
+      if len(DF.loc[DF['HBCode'] == each]['local_lineage'].value_counts().to_frame()) > 20:
+          local_lin_DF = DF.loc[DF['HBCode'] == each]['local_lineage'].value_counts()[:20].to_frame()
+          local_lin_DF = local_lin_DF.reset_index()
+          local_lin_DF.columns = ['Local Lineage', 'Count']
+          local_lin_DF['Count'] = local_lin_DF['Count'].astype(int)
       else:
-          uk_lin_DF = DF.loc[DF['HBCode'] == each]['uk_lineage'].value_counts().to_frame()
-          uk_lin_DF = uk_lin_DF.reset_index()
-          uk_lin_DF.columns = ['UK Lineage', 'Count']
-          uk_lin_DF['Count'] = uk_lin_DF['Count'].astype(int)
+          local_lin_DF = DF.loc[DF['HBCode'] == each]['local_lineage'].value_counts().to_frame()
+          local_lin_DF = local_lin_DF.reset_index()
+          local_lin_DF.columns = ['Local Lineage', 'Count']
+          local_lin_DF['Count'] = local_lin_DF['Count'].astype(int)
 
       if len(DF.loc[DF['HBCode'] == each]['lineage'].value_counts().to_frame()) > 10:
           glob_lin_DF = DF.loc[DF['HBCode'] == each]['lineage'].value_counts()[:10].to_frame()
@@ -139,36 +124,35 @@ def tabulateLins(HBCODE, DF, HBNAME):
           glob_lin_DF.columns = ['Global Lineage', 'Count']
           glob_lin_DF['Count'] = glob_lin_DF['Count'].astype(int)
 
-    tableList = [uk_lin_DF, glob_lin_DF]
+    tableList = [local_lin_DF, glob_lin_DF]
     # print(HBNAME)
     # [print(each.to_markdown()) for each in tableList]
     MDout = pd.concat(tableList, axis=1).fillna("").to_markdown(showindex=False)
     return HBNAME, MDout
 
 
-def uk_lineage_json(HBCODE, cog_mainland_daterestricted):
-    lineage_uk = cog_mainland_daterestricted.loc[cog_mainland_daterestricted['HBCode'] == HBCODE][
-                     'uk_lineage'].value_counts()[:10].to_frame()
+def local_lineage_json(HBCODE, cog_mainland_daterestricted):
+    lineage_local = cog_mainland_daterestricted.loc[cog_mainland_daterestricted['HBCode'] == HBCODE][
+                     'local_lineage'].value_counts()[:10].to_frame()
     lineage_global = cog_mainland_daterestricted.loc[cog_mainland_daterestricted['HBCode'] == HBCODE][
                          'lineage'].value_counts()[:10].to_frame()
-    lineage_uk = lineage_uk.reset_index()
+    lineage_local = lineage_local.reset_index()
     lineage_global = lineage_global.reset_index()
-    lineage_uk.columns = ['UK_Lineage', 'Count']
-    lin_list = lineage_uk['UK_Lineage'].to_list()
+    lineage_local.columns = ['Local_Lineage', 'Count']
+    lin_list = lineage_local['Local_Lineage'].to_list()
     regionName = HBname_code_translation[HBCODE]
-    lineage_uk['region'] = regionName
-    # lothian_lineage_uk['UK_Lineage']=lothian_lineage_uk['UK_Lineage'].str.replace('UK','')
-    lineage_global.columns = ['UK_Lineage', 'Count']
-    lineage_uk_json = lineage_uk.to_json(orient='records')
+    lineage_local['region'] = regionName
+    lineage_global.columns = ['Local_Lineage', 'Count']
+    lineage_local_json = lineage_local.to_json(orient='records')
     lineage_global_json = lineage_global.to_json(orient='records')
-    return lineage_uk_json, lin_list
+    return lineage_local_json, lin_list
 
 
 def lineageRanking(DFin, HBSet, centralCode):
     DF = DFin.copy()
     linsOut = ''
     colsOut = ''
-    sortedcounts = DF.value_counts(subset=['HBCode', 'uk_lineage']).to_frame().reset_index().sort_values(by=0,
+    sortedcounts = DF.value_counts(subset=['HBCode', 'local_lineage']).to_frame().reset_index().sort_values(by=0,
                                                                                                                 ascending=False)
     if centralCode is not None:
         centralloc = [centralCode]
@@ -177,8 +161,8 @@ def lineageRanking(DFin, HBSet, centralCode):
         filteredregionalcounts = sortedcounts.query('HBCode in @region')
         filteredcentralcounts = sortedcounts.query('HBCode in @centralloc')
         filterednoncentralcounts = sortedcounts.query('HBCode in @noncentrallocs')
-        topLinlist = filteredcentralcounts['uk_lineage'][:10].to_list()
-        restLinlist = list(filterednoncentralcounts.query('uk_lineage not in @topLinlist')['uk_lineage'].unique())
+        topLinlist = filteredcentralcounts['local_lineage'][:10].to_list()
+        restLinlist = list(filterednoncentralcounts.query('local_lineage not in @topLinlist')['local_lineage'].unique())
         regionalList = topLinlist + restLinlist
         filler = [graphcolourFiller for i in range(len(regionalList) - 10)]
         linsOut = topLinlist + regionalList
@@ -186,8 +170,8 @@ def lineageRanking(DFin, HBSet, centralCode):
     else:
         region = HBSet['HBCode'].to_list()
         filteredregionalcounts = sortedcounts.query('HBCode in @region')
-        topLinlist = filteredregionalcounts['uk_lineage'][:10].to_list()
-        restLinlist = list(filteredregionalcounts.query('uk_lineage not in @topLinlist')['uk_lineage'].unique())
+        topLinlist = filteredregionalcounts['local_lineage'][:10].to_list()
+        restLinlist = list(filteredregionalcounts.query('local_lineage not in @topLinlist')['local_lineage'].unique())
         regionalList = topLinlist + restLinlist
         filler = [graphcolourFiller for i in range(len(regionalList) - 10)]
         linsOut = topLinlist + regionalList
@@ -212,7 +196,7 @@ def mapProduce(HBSet, DF, region, centralCode=None):
             code = frame['HBCode']
             regionName = HBname_code_translation[code]
             # gather dataset and easily processed desc. stats from pandas-based functions
-            data, lin_list = uk_lineage_json(code, DF)
+            data, lin_list = local_lineage_json(code, DF)
             # Append this dataset - allowing for multiple regions
             datacollated.append(data)
             # gather encoding for chart positioning
@@ -263,7 +247,7 @@ def mapProduce(HBSet, DF, region, centralCode=None):
             code = frame['HBCode']
             regionName = HBname_code_translation[code]
             # gather dataset and easily processed desc. stats from pandas-based functions
-            data, lin_list = uk_lineage_json(code, DF)
+            data, lin_list = local_lineage_json(code, DF)
             # Append this dataset - allowing for multiple regions
             datacollated.append(data)
             # gather encoding for chart positioning
@@ -312,8 +296,6 @@ def decide_HB(metadata_df, HB_translation):
           HB_translation[adm2] = HB
         except:
           HB_translation = ""
-      elif "RHONDDA" in adm2:  
-        HB_translation[adm2] = "Cwm Taf Morgannwg University Health Board"    
 
   return HB_translation
 
@@ -323,13 +305,10 @@ def decide_single_HB(adm2, HB_translation):
   possible_adm2s = adm2.split("|")
 
   for item in possible_adm2s:
-    if "RHONDDA" in item:
-      possible_HBs.append("Cwm Taf Morgannwg University Health Board")
-    else:
-      try:
-        possible_HBs.append(HB_translation[item])
-      except:
-        pass
+    try:
+      possible_HBs.append(HB_translation[item])
+    except:
+      pass
 
   HB_counts = Counter(possible_HBs)
   try:
@@ -342,8 +321,8 @@ def decide_single_HB(adm2, HB_translation):
 
 def getSampleData_final(MetadataDF, HBTranslation, HBCode_translation):
     cog_meta = MetadataDF
-    cog_meta['central_sample_id'] = cog_meta['sequence_name'].str.split('/', expand=True)[1]
-    cog_meta = cog_meta.loc[cog_meta['adm1'].isin(['UK-SCT', 'UK-ENG', 'UK-WLS', 'UK-NIR', 'Scotland', 'Northern_Ireland', "England", "Wales"])]
+    cog_meta['sample_id'] = cog_meta['sequence_name'].str.split('/', expand=True)[1]
+    cog_meta = cog_meta.loc[cog_meta['adm1'].isin(["AB", "BC", "MB", "NB", "NL", "NT", "NS", "NU", "ON", "PE", "QC", "SK", "YT"])]
     HB_translation = decide_HB(cog_meta, HBTranslation)
     cog_meta['HBName'] = cog_meta['adm2'].map(HBTranslation)
     cog_meta['HBCode'] = cog_meta['HBName'].map(HBCode_translation)
@@ -371,8 +350,6 @@ def adm2_to_centralHBCode(sampleframe, translation_dict, HbtoCode):
             HB = translation_dict[each]
           elif "|" in each:
             HB = decide_single_HB(each, translation_dict)
-          elif "RHONDDA" in each:
-            HB = "Cwm Taf Morgannwg University Health Board"
           HBs.append(HB)
     if len(HBs) > 0:
         centralHB = max(HBs, key=HBs.count)
@@ -560,10 +537,10 @@ blank_data_json = """
 blank_data_encoding = """
 {
       "color": {
-        "field": "UK_Lineage",
+        "field": "Local_Lineage",
         "type": "ordinal",
         "scale": {
-          "domain": ["ordered UK_lin list here"],
+          "domain": ["ordered local_lineage list here"],
           "range": ["colour range + filler greys here"]
         }
       }
@@ -611,7 +588,7 @@ blank_subfig_json = """
             },
             {"filter": "datum.rank <= 5"}
           ],
-          "encoding": {"text": {"field": "UK_Lineage", "type": "nominal"}}
+          "encoding": {"text": {"field": "Local_Lineage", "type": "nominal"}}
         }
       ],
       "encoding": {
@@ -677,13 +654,9 @@ else:
       date_start=None
       date_end=None
 
-  # ~~~~~~~
-  mainland_W=finaliseMapping(mainland_boards)
-  HBCode_name_translation=hbcode_hbname_translation(mainland_boards)
   # ~~~~~~~~
-  mainland_W=finaliseMapping(mainland_boards)
-  HBCode_name_translation=hbcode_hbname_translation(mainland_boards)
-  HBname_code_translation=hbname_hbcode_translation(mainland_boards)
+  # mainland_W = finaliseMapping(mainland_boards)
+  HBCode_name_translation = hbcode_hbname_translation(mainland_boards)
 
   # ~~~~~~~
   #mainland_boards=update_adm15(mainland_boards)

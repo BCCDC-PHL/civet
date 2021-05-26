@@ -339,7 +339,7 @@ rule regional_mapping:
         if config["local_lineages"] == True:
             shell("""
         local_scale_analysis.py \
-        --uk-map {config[uk_map_d3]:q} \
+        --bc-map {config[bc_map]:q} \
         --hb-translation {config[HB_translations]:q} \
         --date-restriction {config[date_restriction]:q} \
         --date-pair-start {config[date_range_start]:q} \

@@ -35,7 +35,7 @@ def get_defaults():
                     "no_temp":False,
                     "datadir":"",
                     "input_column":"name",
-                    "data_column":"central_sample_id",
+                    "data_column":"sample_id",
                     "database_sample_date_column":"sample_date",
                     "sample_date_column":"sample_date",
                     "display_name":False,
@@ -43,7 +43,7 @@ def get_defaults():
                     "up_distance":False,
                     "down_distance":False,
                     "collapse_threshold":1,
-                    "sequencing_centre":"DEFAULT",
+                    "sequencing_centre":"BCCDC",
                     "tree_fields":"adm1",
                     "local_lineages":False,
                     "map_sequences":False,
@@ -67,7 +67,7 @@ def get_defaults():
                     "include_bars":False,
                     "omit_trees":False,
                     "omit_appendix":True,
-                    "table_fields":["sample_date", "uk_lineage", "lineage", "phylotype"],
+                    "table_fields":["sample_date", "lineage"],
                     "context_table_summary":False,
                     "threads":1,
                     "force":True,
@@ -97,8 +97,7 @@ def check_adm2_values(config):
             for row in reader:
                 if row["adm2"].upper().replace(" ","_") not in accepted_adm2 and "|" not in row["adm2"] and row["adm2"] != "": 
                     adm2_value = row["adm2"]
-                    sys.stderr.write(qcfunk.cyan(f'Error: {adm2_value} not a valid adm2 region.\n Find a list of valid adm2 values at:\nhttps://artic-network.github.io/civet/geographic_data.html\n'))
-                    sys.stderr.write(qcfunk.cyan(f'Please note: if you have a region that encompasses multiple adm2 regions eg West Midlands, list the correct adm2 regions separated by the "|" symbol to indicate ambiguity.\n'))
+                    sys.stderr.write(qcfunk.cyan(f'Error: {adm2_value} not a valid adm2 region.\n'))
                     sys.exit(-1)
                 elif "|" in row["adm2"]:
                     adm2_value = row["adm2"].split("|")
@@ -115,14 +114,14 @@ def get_package_data(thisdir,config):
     report_args = pkg_resources.resource_filename('civet', 'data/report_arguments.txt')
     footer_fig = pkg_resources.resource_filename('civet', 'data/footer.png')
     clean_locs_file = pkg_resources.resource_filename('civet', 'data/mapping_files/adm2_cleaning.csv')
-    map_input_1 = pkg_resources.resource_filename('civet', 'data/mapping_files/gadm36_GBR_2.json')
-    map_input_2 = pkg_resources.resource_filename('civet', 'data/mapping_files/channel_islands.json')  
-    map_input_3 = pkg_resources.resource_filename('civet', 'data/mapping_files/NI_counties.geojson')  
-    map_input_4 = pkg_resources.resource_filename('civet', 'data/mapping_files/Mainland_HBs_gapclosed_mapshaped_d3.json')
-    map_input_5 = pkg_resources.resource_filename('civet', 'data/mapping_files/urban_areas_UK.geojson')
-    map_input_6 = pkg_resources.resource_filename('civet', 'data/mapping_files/UK_outPC_coords.csv')
-    spatial_translations_1 = pkg_resources.resource_filename('civet', 'data/mapping_files/HB_Translation.pkl')
-    spatial_translations_2 = pkg_resources.resource_filename('civet', 'data/mapping_files/adm2_regions_to_coords.csv')
+    # map_input_1 = pkg_resources.resource_filename('civet', 'data/mapping_files/gadm36_GBR_2.json')
+    # map_input_2 = pkg_resources.resource_filename('civet', 'data/mapping_files/channel_islands.json')  
+    map_input_bc = pkg_resources.resource_filename('civet', 'data/mapping_files/BC_Health_Authority_Boundaries_with_Provincial_Health_Services_Boundary.json')  
+    # map_input_4 = pkg_resources.resource_filename('civet', 'data/mapping_files/Mainland_HBs_gapclosed_mapshaped_d3.json')
+    # map_input_5 = pkg_resources.resource_filename('civet', 'data/mapping_files/urban_areas_UK.geojson')
+    # map_input_6 = pkg_resources.resource_filename('civet', 'data/mapping_files/UK_outPC_coords.csv')
+    spatial_translations_ha = pkg_resources.resource_filename('civet', 'data/mapping_files/HA_Translation.pkl')
+    spatial_translations_bc = pkg_resources.resource_filename('civet', 'data/mapping_files/canada_city_coords.csv')
     appendix_text = pkg_resources.resource_filename('civet', 'data/appendix.txt')
     config["reference_fasta"] = reference_fasta
     config["outgroup_fasta"] = outgroup_fasta
@@ -131,15 +130,15 @@ def get_package_data(thisdir,config):
     config["footer"] = footer_fig
     config["appendix"] = appendix_text
     
-    config["clean_locs_file"] = clean_locs_file
-    config["uk_map"] = map_input_1
-    config["channels_map"] = map_input_2
-    config["ni_map"] = map_input_3
-    config["uk_map_d3"] = map_input_4
-    config["urban_centres"] = map_input_5
-    config["pc_file"] = map_input_6
-    config["HB_translations"] = spatial_translations_1
-    config["PC_translations"] = spatial_translations_2
+    config["clean_locs_file"] = spatial_translations_bc
+    config["bc_map"] = map_input_bc
+    config["channels_map"] = map_input_bc
+    config["ni_map"] = map_input_bc
+    config["uk_map_d3"] = map_input_bc
+    config["urban_centres"] = map_input_bc
+    config["pc_file"] = map_input_bc
+    config["HB_translations"] = spatial_translations_ha
+    config["PC_translations"] = spatial_translations_bc
 
     report_template = os.path.join(thisdir, 'scripts','civet_template.pmd')
 
@@ -155,10 +154,7 @@ def print_data_error(data_dir):
     - cog_global_2020-XX-YY_metadata.csv\n\
     - cog_global_2020-XX-YY_alignment.fasta\n\n"
     +qcfunk.cyan("Please also check that the data directory is correctly specified.\n\n")
-    +qcfunk.cyan(f"\
-To run civet please either\n1) ssh into CLIMB and run with --CLIMB flag\n\
-2) Run using `--remote` flag and your CLIMB username specified e.g. `-uun climb-covid19-smithj`\n\
-3) Specify a local directory with the appropriate files, optionally supply a custom metadata file, custom background tree or custom background fasta file\n\n"""))
+    +qcfunk.cyan(f"To run civet, please specify a local directory with the appropriate files. Optionally supply a custom metadata file, custom background tree or custom background fasta file\n\n"""))
 
 def rsync_data_from_climb(uun, data_dir):
     rsync_command = f"rsync -avzh --exclude 'cog' --delete-after {uun}@bham.covid19.climb.ac.uk:/cephfs/covid/bham/results/phylogenetics/latest/civet/ '{data_dir}'"
@@ -306,8 +302,8 @@ def get_datadir(args_climb,args_uun,args_datadir,args_metadata, args_tree, args_
         if not os.path.exists(data_dir):
             print_data_error(data_dir)
             sys.exit(-1)
-        
-        
+
+
         background_seqs, background_tree, background_metadata, data_date, background_metadata_all = get_background_files(data_dir,background_metadata, background_tree,background_seqs, cog_all)
         
         
@@ -473,8 +469,8 @@ def local_lineages_qc(config):
         if "adm2" not in config["background_metadata_header"]:
             sys.stderr.write(qcfunk.cyan('Error: no geographic information found for local lineage analysis. Please provide a column in the background metadata with the header "adm2"\n'))
             sys.exit(-1)
-        elif "uk_lineage" not in config["background_metadata_header"]:
-            sys.stderr.write(qcfunk.cyan('Error: no uk lineage information found for local lineage analysis. Please provide a column in the background metadata with the header "uk_lineage"\n'))
+        elif "local_lineage" not in config["background_metadata_header"]:
+            sys.stderr.write(qcfunk.cyan('Error: no local lineage information found for local lineage analysis. Please provide a column in the background metadata with the header "local_lineage"\n'))
             sys.exit(-1)
 
         if config["date_restriction"]:
@@ -484,7 +480,7 @@ def local_lineages_qc(config):
                 except:
                     print(qcfunk.cyan(f'date range start in incorrect format. Please use i.e. YYYY-MM-DD'))
                     sys.exit(-1)
-                
+
             if config["date_range_end"] and type(config["date_range_end"]) == str:
                 try:
                     check_date = dt.datetime.strptime(config["date_range_end"], date_format).date()
@@ -506,7 +502,7 @@ def local_lineages_qc(config):
         else:
             print(qcfunk.green(f"Local lineage analysis not restricted by time, will show background lineage composition for the whole of the epidemic"))
 
-        
+
 
 def local_lineages_to_config(central, neighbouring, region, config):
 
@@ -564,8 +560,9 @@ def map_sequences_config(config):
 
 def get_sequencing_centre_header(config):
     
-    sc_list = ["PHEC", 'LIVE', 'BIRM', 'PHWC', 'CAMB', 'NORW', 'GLAS', 'EDIN', 'SHEF',
-                'EXET', 'NOTT', 'PORT', 'OXON', 'NORT', 'NIRE', 'GSTT', 'LOND', 'SANG',"NIRE"]
+    sc_list = [
+        "BCCDC",
+    ]
 
     sequencing_centre = config["sequencing_centre"]
     if sequencing_centre in sc_list or sequencing_centre == "DEFAULT":
@@ -704,7 +701,7 @@ def make_full_civet_table(query_dict, full_taxon_dict, tree_fields, label_fields
             if tree_fields != []:
                 for i in tree_fields:
                     df_dict[i].append(taxon.attribute_dict[i])
-            
+
             if label_fields != []:
                 for i in label_fields: 
                     if i not in tree_fields and i != "sample_date" and i != input_column:
@@ -735,7 +732,7 @@ def anonymise_sequences(taxon_dict, query_dict, safety_level, from_metadata):
                     count += 1
                     tax.display_name = display_name
 
-                elif tax.country != "UK":
+                elif tax.country != "Canada":
                     tax.display_name = tax.input_display_name
 
         taxon_dict[name] = tax
@@ -744,12 +741,12 @@ def anonymise_sequences(taxon_dict, query_dict, safety_level, from_metadata):
 
 
 def generate_labels(tax,safety_level, custom_tip_fields):
-    
+
     name = tax.display_name
     date = tax.sample_date
-    
+
     display_name = f"{name}|{date}"
-    
+
     if "location_label" in tax.attribute_dict.keys() and safety_level != "2": #if it's being run locally OR if safe status is on no adm2 for distribution
         adm2 = tax.attribute_dict["location_label"]
         display_name = f"{name}|{adm2}|{date}"
@@ -768,27 +765,25 @@ def generate_labels(tax,safety_level, custom_tip_fields):
 def get_acceptable_adm2(config):
 
     GADM_adm2 = [
-    'BARNSLEY', 'BATH_AND_NORTH_EAST_SOMERSET', 'BEDFORDSHIRE', 'BIRMINGHAM', 'BLACKBURN_WITH_DARWEN', 'BLACKPOOL', 'BOLTON', 'BOURNEMOUTH', 'BRACKNELL_FOREST', 'BRADFORD', 'BRIGHTON_AND_HOVE', 'BRISTOL', 'BUCKINGHAMSHIRE', 'BURY',
-    'CALDERDALE', 'CAMBRIDGESHIRE', 'CENTRAL_BEDFORDSHIRE', 'CHESHIRE_EAST', 'CHESHIRE_WEST_AND_CHESTER', 'CORNWALL', 'COVENTRY', 'CUMBRIA', 
-    'DARLINGTON', 'DERBY', 'DERBYSHIRE', 'DEVON', 'DONCASTER', 'DORSET', 'DUDLEY', 'DURHAM', 
-    'EAST_RIDING_OF_YORKSHIRE', 'EAST_SUSSEX', 'ESSEX', 
-    'GATESHEAD', 'GLOUCESTERSHIRE', 'GREATER_LONDON', 
-    'HALTON', 'HAMPSHIRE', 'HARTLEPOOL', 'HEREFORDSHIRE', 'HERTFORDSHIRE', 
-    'ISLE_OF_WIGHT', 'ISLES_OF_SCILLY', 
-    'KENT', 'KINGSTON_UPON_HULL', 'KIRKLEES', 'KNOWSLEY', 
-    'LANCASHIRE', 'LEEDS', 'LEICESTER', 'LEICESTERSHIRE', 'LINCOLNSHIRE', 'LUTON', 
-    'MANCHESTER', 'MEDWAY', 'MIDDLESBROUGH', 'MILTON_KEYNES', 
-    'NEWCASTLE_UPON_TYNE', 'NORFOLK', 'NORTH_LINCOLNSHIRE', 'NORTH_SOMERSET', 'NORTH_TYNESIDE', 'NORTH_YORKSHIRE', 'NORTHAMPTONSHIRE', 'NORTHUMBERLAND', 'NOTTINGHAM', 'NOTTINGHAMSHIRE', 
-    'OLDHAM', 'OXFORDSHIRE', 
-    'PETERBOROUGH', 'PLYMOUTH', 'POOLE', 'PORTSMOUTH', 
-    'READING', 'REDCAR_AND_CLEVELAND', 'ROCHDALE', 'ROTHERHAM', 'RUTLAND', 
-    'SAINT_HELENS', 'SALFORD', 'SANDWELL', 'SEFTON', 'SHEFFIELD', 'SHROPSHIRE', 'SLOUGH', 'SOLIHULL', 'SOMERSET', 'SOUTH_GLOUCESTERSHIRE', 'SOUTH_TYNESIDE', 'SOUTHAMPTON', 'SOUTHEND-ON-SEA', 'STAFFORDSHIRE', 'STOCKPORT', 'STOCKTON-ON-TEES', 'STOKE-ON-TRENT', 'SUFFOLK', 'SUNDERLAND', 'SURREY', 'SWINDON', 
-    'TAMESIDE', 'TELFORD_AND_WREKIN', 'THURROCK', 'TORBAY', 'TRAFFORD', 'WAKEFIELD', 'WALSALL', 'WARRINGTON', 'WARWICKSHIRE', 'WEST_BERKSHIRE', 'WEST_SUSSEX', 'WIGAN', 'WILTSHIRE', 'WINDSOR_AND_MAIDENHEAD', 'WIRRAL', 'WOKINGHAM', 'WOLVERHAMPTON', 'WORCESTERSHIRE', 'YORK',
-    'ANTRIM_AND_NEWTOWNABBEY', 'ARMAGH_BANBRIDGE_AND_CRAIGAVON', 'BELFAST', 'CAUSEWAY_COAST_AND_GLENS', 'DERRY_AND_STRABANE', 'FERMANAGH_AND_OMAGH', 'LISBURN_AND_CASTLEREAGH', 'MID_AND_EAST_ANTRIM', 'MID_ULSTER', 'NEWRY_MOURNE_AND_DOWN', 'NORTH_DOWN_AND_ARDS', 'TYRONE', 'ANTRIM', 'ARMAGH', 'FERMANAGH', 'LONDONDERRY', 'DOWN',
-    'ABERDEEN', 'ABERDEENSHIRE', 'ANGUS', 'ARGYLL_AND_BUTE', 'CLACKMANNANSHIRE', 'DUMFRIES_AND_GALLOWAY', 'DUNDEE', 'EAST_AYRSHIRE', 'EAST_DUNBARTONSHIRE', 'EAST_LOTHIAN', 'EAST_RENFREWSHIRE', 'EDINBURGH', 'EILEAN_SIAR', 'FALKIRK', 'FIFE', 
-    'GLASGOW', 'HIGHLAND', 'INVERCLYDE', 'MIDLOTHIAN', 'MORAY', 'NORTH_AYRSHIRE', 'NORTH_LANARKSHIRE', 'ORKNEY_ISLANDS', 'PERTHSHIRE_AND_KINROSS', 'RENFREWSHIRE', 'SCOTTISH_BORDERS', 'SHETLAND_ISLANDS', 'SOUTH_AYRSHIRE', 'SOUTH_LANARKSHIRE', 'STIRLING', 'WEST_DUNBARTONSHIRE', 'WEST_LOTHIAN',
-    'ANGLESEY', 'BLAENAU_GWENT', 'BRIDGEND', 'CAERPHILLY', 'CARDIFF', 'CARMARTHENSHIRE', 'CEREDIGION', 'CONWY', 'DENBIGHSHIRE', 'FLINTSHIRE', 'GWYNEDD', 'MERTHYR_TYDFIL', 'MONMOUTHSHIRE', 'NEATH_PORT_TALBOT', 'NEWPORT', 'PEMBROKESHIRE', 'POWYS', 'RHONDDA_CYNON_TAFF', 'SWANSEA', 'TORFAEN', 'VALE_OF_GLAMORGAN', 'WREXHAM',
-    'GUERNSEY', "JERSEY"
+        "VANCOUVER",
+        "RICHMOND",
+        "SURREY",
+        "WHITE_ROCK",
+        "DELTA",
+        "BURNABY",
+        "NORTH_VANCOUVER",
+        "WEST_VANCOUVER",
+        "NEW_WESTMINSTER",
+        "SURREY",
+        "ABBOTSFORD",
+        "HOPE",
+        "CHILLIWACK",
+        "COQUITLAM",
+        "MAPLE_RIDGE",
+        "PORT_COQUITLAM",
+        "PORT_MOODY",
+        "PITT_MEADOWS",
+        "SQUAMISH",
     ]
 
     config["clean_locs"] = GADM_adm2
